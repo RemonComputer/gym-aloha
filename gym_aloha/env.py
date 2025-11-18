@@ -19,8 +19,10 @@ from gym_aloha.utils import sample_box_pose, sample_insertion_pose
 
 
 class AlohaEnv(gym.Env):
+    TASK_DESCRIPTION = "Pick up the cube with the right arm and transfer it to the left arm."
     # TODO(aliberts): add "human" render_mode
-    metadata = {"render_modes": ["rgb_array"], "render_fps": 50}
+    metadata = {"render_modes": ["rgb_array"], "render_fps": 50,
+                "task": TASK_DESCRIPTION}
 
     def __init__(
         self,
@@ -80,10 +82,12 @@ class AlohaEnv(gym.Env):
                         shape=(len(JOINTS),),
                         dtype=np.float64,
                     ),
+                    "task": spaces.Text(max_length=len(self.TASK_DESCRIPTION)),
                 }
             )
 
         self.action_space = spaces.Box(low=-1, high=1, shape=(len(ACTIONS),), dtype=np.float32)
+        self.task_description = [self.TASK_DESCRIPTION]
 
     def render(self):
         return self._render(visualize=True)
@@ -139,11 +143,15 @@ class AlohaEnv(gym.Env):
         if self.obs_type == "state":
             raise NotImplementedError()
         elif self.obs_type == "pixels":
-            obs = {"top": raw_obs["images"]["top"].copy()}
+            obs = {
+                "top": raw_obs["images"]["top"].copy(),
+                "task": self.TASK_DESCRIPTION
+                }
         elif self.obs_type == "pixels_agent_pos":
             obs = {
                 "pixels": {"top": raw_obs["images"]["top"].copy()},
                 "agent_pos": raw_obs["qpos"],
+                "task": self.TASK_DESCRIPTION,
             }
         return obs
 
